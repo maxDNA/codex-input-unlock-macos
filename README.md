@@ -37,60 +37,67 @@ CDP 守护进程 (cdp-supervisor.mjs + quota-gate.cjs)
 
 ## 安装
 
+任选一种方式获取代码。
+
+### 方式一：git clone
+
 ```bash
 git clone https://github.com/maxDNA/codex-input-unlock-macos.git
 cd codex-input-unlock-macos
+```
+
+clone 会自动带上可执行位，可以直接进入「使用」。
+
+### 方式二：从 Release 页面下载
+
+到 [Releases](https://github.com/maxDNA/codex-input-unlock-macos/releases/latest) 页面下载最新压缩包，解压后进入目录。zip 不保存可执行位，需要先补一次：
+
+```bash
 chmod +x codex-input-unlock.sh 'Codex Input Unlock.command'
 ```
 
-如果 Node.js 未安装，使用 Homebrew 执行 `brew install node`。工具直接从仓库目录运行，无需额外安装步骤。
+### 安装 Node.js
 
-如果 Codex Desktop 安装在非标准位置，设置环境变量后再启动：
+需要 Node.js 22+。未安装的话：
+
+```bash
+brew install node
+```
+
+### 非默认安装路径
+
+如果 Codex Desktop 不在 `/Applications`，先设置环境变量：
 
 ```bash
 export CODEX_APP_PATH='/path/to/ChatGPT.app'
 ```
 
-## 使用
-
-```bash
-./codex-input-unlock.sh launch    # 冷启动 Codex Desktop 并解锁输入框
-./codex-input-unlock.sh verify    # 检查解锁状态
-./codex-input-unlock.sh stop      # 停止 CDP 守护进程
-./codex-input-unlock.sh diagnose  # 环境诊断
-```
-
-也可以在 Finder 中双击 `Codex Input Unlock.command` 启动。
-
-状态文件和日志保存在 `~/Library/Application Support/CodexInputUnlock/`。
+这一步做在启动前即可，建议写进 `~/.zshrc` 省得每次设置。
 
 ---
 
-## 快速上手
+## 使用
 
-### 使用前配置
+本工具只服务「登录官方账号 + 第三方 Provider」这一种场景；纯 API Key 方式（不登录官方账号）不会遇到这个门禁，无需本工具。请在 Codex Desktop 中登录你的 Codex 账号，并建议使用 ccswitch 或 magpie 等工具完成第三方 Provider 配置，本工具只解除门禁。本项目不会代您创建、修改或校验 Provider 配置。
 
-启动 Codex Input Unlock 前，请先在 `~/.codex/config.toml` 中配置并确认您的第三方 Provider 可以正常使用。本项目不会代您创建、修改或校验 Provider 配置。
+如需手动检查配置，请先在 `~/.codex/config.toml` 中确保 Provider 配置中已经设置了 `requires_openai_auth = true`。
 
-如果您希望在使用第三方 Provider 的同时保留 Codex 官方账号的登录状态（例如继续使用依赖登录状态的功能），请在对应 Provider 配置中设置：
+启动前请**完全退出**正在运行的 Codex Desktop（包括菜单栏图标），否则启动器会报错并拒绝启动。
 
-```toml
-requires_openai_auth = true
-```
+下面两种启动方式任选其一。
 
-同时请先在 Codex Desktop 中登录您的 Codex 账号。只有第三方 Provider、`requires_openai_auth = true` 和 Codex 登录状态均已准备好后，本工具才负责解除官方额度状态造成的本地输入与发送门禁；它不会替代 Provider 配置或账号登录。
-
-### 1. 启动
-
-> **注意**：启动前请**完全退出**正在运行的 Codex Desktop（包括菜单栏图标）。如果检测到客户端仍在运行，启动器不会关闭它，而是报错并保留进程信息。
+### 方法一：命令行
 
 ```bash
+cd codex-input-unlock-macos
 ./codex-input-unlock.sh launch
 ```
 
-也可以在 Finder 中双击 `Codex Input Unlock.command`。
+### 方法二：Finder 双击
 
-### 2. 验证状态
+在 Finder 中双击 `Codex Input Unlock.command`，窗口提示按回车关闭即表示启动完成。
+
+### 验证与停止
 
 ```bash
 ./codex-input-unlock.sh verify
@@ -98,11 +105,20 @@ requires_openai_auth = true
 
 输出 `VERIFY: OK` 且 `gateStats.unlockCount > 0` 表示守护进程正常、断点已挂载，输入框已解除封锁。
 
-### 3. 停止
-
 ```bash
 ./codex-input-unlock.sh stop
 ```
+
+### 命令总览
+
+```bash
+./codex-input-unlock.sh launch    # 冷启动 Codex Desktop 并解锁输入框
+./codex-input-unlock.sh verify    # 检查解锁状态
+./codex-input-unlock.sh stop      # 停止 CDP 守护进程
+./codex-input-unlock.sh diagnose  # 环境诊断（Node 版本、客户端路径、运行状态）
+```
+
+状态文件和日志保存在 `~/Library/Application Support/CodexInputUnlock/`。
 
 ---
 
