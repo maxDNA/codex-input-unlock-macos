@@ -15,8 +15,6 @@
 set -euo pipefail
 
 INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APP_PATH="${CODEX_APP_PATH:-/Applications/ChatGPT.app}"
-APP_BINARY="$APP_PATH/Contents/MacOS/ChatGPT"
 APP_BUNDLE_ID="com.openai.codex"
 SUPPORT_DIR="$HOME/Library/Application Support/CodexInputUnlock"
 STATE_DIR="$SUPPORT_DIR/state"
@@ -44,6 +42,29 @@ find_node() {
     if [ -x "$candidate" ]; then echo "$candidate"; return; fi
   done
   fail "Node.js 22+ is required but was not found. Install it (brew install node) and retry."
+}
+
+find_app() {
+  # Explicit override wins; then Spotlight locates the bundle by ID so
+  # non-/Applications installs work; last resort is the default path.
+  if [ -n "${CODEX_APP_PATH:-}" ]; then
+    if [ -d "$CODEX_APP_PATH" ]; then
+      echo "$CODEX_APP_PATH"
+      return 0
+    fi
+    fail "CODEX_APP_PATH is set to '$CODEX_APP_PATH' but the directory does not exist."
+  fi
+  local found
+  found="$(mdfind "kMDItemCFBundleIdentifier == '$APP_BUNDLE_ID'" 2>/dev/null | head -1 || true)"
+  if [ -n "$found" ] && [ -d "$found" ]; then
+    echo "$found"
+    return 0
+  fi
+  if [ -d "/Applications/ChatGPT.app" ]; then
+    echo "/Applications/ChatGPT.app"
+    return 0
+  fi
+  return 1
 }
 
 get_free_port() {
@@ -74,7 +95,12 @@ action_launch() {
   if [ "${node_version%%.*}" -lt 22 ]; then
     fail "Node.js 22+ required, found $node_version"
   fi
-  [ -x "$APP_BINARY" ] || fail "Codex Desktop not found at $APP_PATH (set CODEX_APP_PATH to override)."
+  local app_path
+  if ! app_path="$(find_app)"; then
+    fail "Codex Desktop not found. Install it, or set CODEX_APP_PATH to its .app path."
+  fi
+  local app_binary="$app_path/Contents/MacOS/ChatGPT"
+  [ -x "$app_binary" ] || fail "Found $app_path but its executable is missing or not runnable."
 
   local app_pids supervisor_pid
   app_pids="$(running_app_pids | tr '\n' ' ')"
@@ -100,7 +126,7 @@ action_launch() {
   echo "$supervisor_pid_new" > "$PID_FILE"
 
   info "Cold-starting Codex Desktop with debug flags..."
-  open -a "$APP_PATH" --args \
+  open -a "$app_path" --args \
     --remote-debugging-address=127.0.0.1 \
     --remote-debugging-port="$port" \
     --remote-allow-origins="http://127.0.0.1:$port"
@@ -165,10 +191,11 @@ action_diagnose() {
   local node_bin
   node_bin="$(find_node)"
   info "node: $("$node_bin" -p 'process.versions.node') at $node_bin"
-  if [ -x "$APP_BINARY" ]; then
-    info "app: $APP_PATH ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PATH/Contents/Info.plist" 2>/dev/null || echo '?'))"
+  local app_path
+  if app_path="$(find_app)"; then
+    info "app: $app_path ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app_path/Contents/Info.plist" 2>/dev/null || echo '?'))"
   else
-    info "app: NOT FOUND at $APP_PATH"
+    info "app: NOT FOUND (searched Spotlight by bundle ID and /Applications/ChatGPT.app)"
   fi
   info "app running pids: $(running_app_pids | tr '\n' ' ')"
   info "supervisor: $(running_supervisor_pid || echo 'not running')"

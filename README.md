@@ -30,7 +30,7 @@ CDP 守护进程 (cdp-supervisor.mjs + quota-gate.cjs)
 ## 环境要求
 
 - **操作系统**：macOS（Apple Silicon / Intel）
-- **官方客户端**：`/Applications/ChatGPT.app`（bundle ID `com.openai.codex`）
+- **官方客户端**：Codex Desktop，默认路径 `/Applications/ChatGPT.app`，通过 bundle ID `com.openai.codex` 自动检测
 - **运行依赖**：Node.js 22+
 
 ---
@@ -44,6 +44,12 @@ chmod +x codex-input-unlock.sh 'Codex Input Unlock.command'
 ```
 
 如果 Node.js 未安装，使用 Homebrew 执行 `brew install node`。工具直接从仓库目录运行，无需额外安装步骤。
+
+如果 Codex Desktop 安装在非标准位置，设置环境变量后再启动：
+
+```bash
+export CODEX_APP_PATH='/path/to/ChatGPT.app'
+```
 
 ## 使用
 

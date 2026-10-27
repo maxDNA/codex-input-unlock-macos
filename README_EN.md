@@ -31,6 +31,12 @@ chmod +x codex-input-unlock.sh 'Codex Input Unlock.command'
 
 If Node.js is not installed, install it with Homebrew using `brew install node`. The tool runs directly from the repository directory; no additional installation step is required.
 
+If Codex Desktop is installed in a non-standard location, set the environment variable before launching:
+
+```bash
+export CODEX_APP_PATH='/path/to/ChatGPT.app'
+```
+
 ## Usage
 
 ```bash
@@ -68,7 +74,7 @@ CDP supervisor (cdp-supervisor.mjs + quota-gate.cjs)
 ## Requirements
 
 - **Operating system:** macOS (Apple Silicon / Intel)
-- **Official client:** `/Applications/ChatGPT.app` (bundle ID `com.openai.codex`)
+- **Official client:** Codex Desktop, default path `/Applications/ChatGPT.app`, detected automatically by bundle ID `com.openai.codex`
 - **Runtime dependencies:** Node.js 22+
 
 ---
