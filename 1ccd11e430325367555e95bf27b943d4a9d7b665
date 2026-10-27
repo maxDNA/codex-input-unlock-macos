@@ -1,0 +1,10 @@
+macOS port v0.1.0
+
+First tagged release of the macOS port.
+
+- Shell launcher with Spotlight-based Codex Desktop auto-detection
+- Core CDP supervisor and quota gate reused byte-for-byte from upstream
+- Bilingual install and usage documentation
+- macOS CI with syntax checks for shell and Node sources
+
+Requires Node.js 22+ and macOS.
