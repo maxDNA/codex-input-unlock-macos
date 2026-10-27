@@ -8,8 +8,8 @@ permissions:
   contents: read
 
 jobs:
-  windows-smoke:
-    runs-on: windows-latest
+  macos-smoke:
+    runs-on: macos-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -19,8 +19,10 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Run static smoke tests
-        shell: pwsh
+      - name: Verify macOS launcher and CDP sources
         run: |
-          $ErrorActionPreference = 'Stop'
-          pwsh -NoProfile -ExecutionPolicy Bypass -File '.\tests\smoke.ps1' -SkipPackageCheck
+          set -euo pipefail
+          bash -n codex-input-unlock.sh
+          bash -n 'Codex Input Unlock.command'
+          node --check cdp-supervisor.mjs
+          node --check quota-gate.cjs
